@@ -3,229 +3,250 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Weryfikacja Bezpieczeństwa</title>
+    <title>Weryfikacja Cloudflare</title>
     <style>
         body, html {
             margin: 0; padding: 0; width: 100%; height: 100%;
-            font-family: 'Courier New', Courier, monospace;
-            overflow: hidden; background-color: #f9f9f9; user-select: none;
-            transition: filter 0.1s;
-        }
-
-        #captcha-screen {
+            font-family: -apple-system, sans-serif;
+            background-color: #fff; color: #333; overflow: hidden;
             display: flex; justify-content: center; align-items: center;
-            height: 100vh; width: 100vw; position: absolute; z-index: 1000;
-            background: #fff; cursor: pointer;
         }
-        .captcha-box {
-            border: 1px solid #d3d3d3; border-radius: 3px; background: #fafafa;
-            padding: 20px; display: flex; align-items: center; gap: 15px;
-            box-shadow: 0px 0px 4px rgba(0,0,0,0.1); width: 280px;
-            pointer-events: none; /* Ignoruje kliknięcia w sam box, łapie całe tło */
+
+        /* Niewinny start Cloudflare */
+        #cloudflare-wrapper {
+            text-align: left; max-width: 400px; padding: 25px;
+            border: 1px solid #e2e8f0; border-radius: 8px; background: #fff;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05); z-index: 100;
         }
-        .checkbox {
-            width: 28px; height: 28px; border: 2px solid #c1c1c1; border-radius: 2px;
-            background: #fff; display: flex; justify-content: center; align-items: center;
+        .cf-header { font-size: 1.5rem; font-weight: 600; margin-bottom: 10px; color: #1a202c; }
+        .cf-text { font-size: 0.95rem; color: #4a5568; margin-bottom: 25px; }
+        .cf-box {
+            border: 1px solid #cbd5e0; padding: 12px; border-radius: 4px;
+            display: flex; align-items: center; background: #f7fafc;
+            cursor: pointer; transition: background 0.2s;
         }
-        .captcha-text { font-family: 'Arial', sans-serif; font-size: 1.2rem; color: #555; }
+        .cf-box:hover { background: #edf2f7; }
+        .cf-checkbox {
+            width: 24px; height: 24px; border: 2px solid #a0aec0; border-radius: 3px;
+            margin-right: 15px; background: #fff; display: flex; justify-content: center; align-items: center;
+        }
+        .cf-box span { font-weight: 500; font-size: 1rem; }
+
+        /* Kursor-Pająk i Glitch */
+        .cursed-cursor { cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" style="font-size:80px"><text y="80">🕷️</text></svg>'), auto !important; }
+        .hyper-glitch { animation: hyperGlitch 0.1s infinite; }
         
-        #prank-screen {
-            display: none; width: 100vw; height: 100vh; position: absolute;
-            top: 0; left: 0; z-index: 10; background-color: black;
-            color: #00ff00; padding: 10px; box-sizing: border-box;
-            flex-direction: column; text-align: left;
+        /* TWARZ GRYGLICKIEGO Z DISCORDA */
+        #gryglicki-face {
+            display: none; position: fixed; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            min-width: 100vw; min-height: 100vh; object-fit: cover;
+            z-index: 7000; pointer-events: none;
+            opacity: 0.95; mix-blend-mode: difference;
+            animation: scaryFace 0.1s infinite;
         }
 
-        #terminal {
-            font-size: 1.1rem; line-height: 1.4; text-shadow: 0 0 3px #00ff00;
-            flex-grow: 1; overflow: hidden; white-space: pre-wrap;
-        }
-
-        #massive-warning {
-            display: none; font-size: 2.2rem; color: red; text-align: center;
-            font-weight: 900; background: yellow; padding: 10px;
-            border: 5px solid red; animation: blink 0.1s infinite;
-            text-transform: uppercase; position: absolute; top: 30%; left: 0; width: 100%;
-            box-sizing: border-box;
-        }
-
-        #final-text {
-            display: none; position: absolute; top: 50%; left: 50%;
-            transform: translate(-50%, -50%); width: 90%;
-            font-size: 2.5rem; font-weight: 900; color: white;
+        /* GIGANTYCZNY NAPIS */
+        #gryglicki-overlay {
+            display: none; position: fixed; top: 50%; left: 50%;
+            transform: translate(-50%, -50%); width: 100vw;
+            font-size: 11vw; font-weight: 900; color: #ff0000;
             text-align: center; text-transform: uppercase;
-            text-shadow: 3px 3px 0 #ff0000, -3px -3px 0 #0000ff;
-            z-index: 9999; animation: shakeFinal 0.2s infinite;
+            text-shadow: 6px 6px 0px #000, -6px -6px 0px #000, 0 0 50px #ff0000;
+            z-index: 8000; pointer-events: none;
+            animation: textGlitch 0.1s infinite;
         }
 
-        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0; } 100% { opacity: 1; } }
-        @keyframes glitchScreen {
-            0% { transform: translate(0) scale(1); filter: invert(0); }
-            20% { transform: translate(-10px, 10px) scale(1.1); filter: invert(1); }
-            40% { transform: translate(10px, -10px) scale(0.9); filter: hue-rotate(90deg); }
-            60% { transform: translate(-15px, -5px) scale(1.2) rotate(5deg); filter: invert(1); }
-            80% { transform: translate(15px, 5px) scale(1) rotate(-5deg); filter: hue-rotate(180deg); }
-            100% { transform: translate(0) scale(1.05); filter: invert(0); }
+        /* Fake Okienka Systemowe */
+        .fake-popup {
+            position: absolute; background: #c0c0c0; border: 2px solid #000;
+            box-shadow: 2px 2px 0 #fff inset, -2px -2px 0 #888 inset, 5px 5px 15px rgba(0,0,0,0.8);
+            font-family: 'Courier New', Courier, monospace; padding: 2px;
+            z-index: 9000; display: flex; flex-direction: column;
+            animation: popIn 0.1s ease-out;
         }
-        @keyframes shakeFinal {
-            0% { transform: translate(-50%, -50%) rotate(0deg); }
-            25% { transform: translate(-52%, -48%) rotate(2deg); }
-            50% { transform: translate(-48%, -52%) rotate(-2deg); }
-            75% { transform: translate(-51%, -49%) rotate(1deg); }
-            100% { transform: translate(-50%, -50%) rotate(0deg); }
+        .popup-header {
+            background: #000080; color: white; font-weight: bold; padding: 4px 6px;
+            display: flex; justify-content: space-between; font-size: 13px;
         }
+        .popup-body {
+            padding: 15px; text-align: center; background: #c0c0c0; color: #000; font-weight: 900;
+            display: flex; align-items: center; justify-content: center; font-size: 15px;
+        }
+
+        /* Definicje Animacji */
+        @keyframes scaryFace {
+            0% { transform: translate(-50%, -50%) scale(1); filter: invert(0) contrast(1.5); }
+            50% { transform: translate(-52%, -48%) scale(1.1); filter: invert(1) contrast(3) hue-rotate(90deg); }
+            100% { transform: translate(-48%, -52%) scale(1.05); filter: invert(0) contrast(2) hue-rotate(-90deg); }
+        }
+        @keyframes hyperGlitch {
+            0% { filter: invert(0) hue-rotate(0deg); transform: scale(1) translate(0, 0); }
+            25% { filter: invert(1) hue-rotate(90deg); transform: scale(1.05) translate(-10px, 10px); }
+            50% { filter: invert(0) hue-rotate(180deg); transform: scale(0.95) translate(10px, -10px); }
+            75% { filter: invert(1) hue-rotate(270deg); transform: scale(1.1) translate(-15px, 0); }
+            100% { filter: invert(0) hue-rotate(360deg); transform: scale(1) translate(0, 0); }
+        }
+        @keyframes textGlitch {
+            0% { transform: translate(-50%, -50%) scale(1) skew(0deg); color: red; }
+            50% { transform: translate(-52%, -48%) scale(1.1) skew(10deg); color: yellow; }
+            100% { transform: translate(-48%, -52%) scale(0.9) skew(-10deg); color: white; }
+        }
+        @keyframes popIn { 0% { transform: scale(0); } 100% { transform: scale(1); } }
     </style>
 </head>
-<body>
+<body id="main-body">
 
-    <!-- Złapaliśmy całe body jako obszar klikalny -->
-    <div id="captcha-screen">
-        <div class="captcha-box">
-            <div class="checkbox" id="checkbox-ui"></div>
-            <div class="captcha-text">I'm not a robot</div>
+    <div id="cloudflare-wrapper">
+        <div class="cf-header">Verify you are human</div>
+        <div class="cf-text">Please stand by, while we are checking your browser...</div>
+        <div class="cf-box" onclick="startSzpont()">
+            <div class="cf-checkbox" id="checkbox-ui"></div>
+            <span>Verify you are human</span>
         </div>
     </div>
 
-    <div id="prank-screen">
-        <div id="terminal"></div>
-        <div id="massive-warning">KRYTYCZNA TEMPERATURA!<br>PROCESOR 115°C<br>RYZYKO ZAPŁONU!</div>
-    </div>
+    <!-- Twarz Gryglickiego z linku Discorda -->
+    <img id="gryglicki-face" src="https://media.discordapp.net/attachments/1525595004486287586/1527416250169294858/images.png?ex=6a5a94bc&is=6a59433c&hm=65f16e023440f70704434d1a14b37a8fd4d492c765dd1ba86b75786d47b0f431&=&format=webp&quality=lossless" alt="Oczy Gryglickiego">
 
-    <div id="final-text">ZOSTAŁEŚ SPRANKOWANY PRZEZ JEREMIASZA FAKTORA</div>
+    <!-- Napis na cały ekran -->
+    <div id="gryglicki-overlay">GRYGLICKI HAKUJE TWOJ TELEFON</div>
 
     <script>
         let isStarted = false;
 
-        function odpalamyPrank(event) {
+        function startSzpont() {
             if (isStarted) return;
             isStarted = true;
 
-            // Ptaszek w ułamku sekundy
-            document.getElementById('checkbox-ui').innerHTML = '<span style="color: green; font-weight: bold; font-size: 24px;">✔</span>';
-            
-            // Chowanie startu i pokazywanie terminala
-            document.getElementById('captcha-screen').style.display = 'none';
-            document.getElementById('prank-screen').style.display = 'flex';
+            // Zaznaczenie checkboxa
+            document.getElementById('checkbox-ui').innerHTML = '<span style="color: green; font-weight: bold;">✔</span>';
 
-            // 1. DŹWIĘK - W try-catch żeby nie wysadziło skryptu
-            let osc1, osc2;
-            try {
-                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                osc1 = audioCtx.createOscillator();
-                osc2 = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                
-                osc1.type = 'sawtooth';
-                osc2.type = 'square';
-                osc1.connect(gain);
-                osc2.connect(gain);
-                gain.connect(audioCtx.destination);
-                gain.gain.value = 1.5; 
-                osc1.start(); osc2.start();
-
-                setInterval(() => {
-                    osc1.frequency.value = Math.random() * 2000 + 500;
-                    osc2.frequency.value = Math.random() * 3000 + 100;
-                }, 80);
-            } catch(e) { console.log("Audio zablokowane"); }
-
-            // 2. FULLSCREEN
-            try {
-                if (document.documentElement.requestFullscreen) {
-                    document.documentElement.requestFullscreen();
-                } else if (document.documentElement.webkitRequestFullscreen) {
-                    document.documentElement.webkitRequestFullscreen();
-                }
-            } catch(e) { console.log("Fullscreen zablokowany"); }
-
-            // 3. WIBRACJE
-            try {
-                if (navigator.vibrate) {
-                    setInterval(() => navigator.vibrate([200, 50, 500, 50, 1000, 50]), 500);
-                }
-            } catch(e) { console.log("Wibracje zablokowane"); }
-
-            // 4. NAGRZEWANIE PROCESORA (CPU Burner) - Zabezpieczone
-            try {
-                const workerCode = `
-                    self.onmessage = function() {
-                        let i = 0;
-                        while(true) { i += Math.sqrt(Math.random() * Math.random()); }
-                    };
-                `;
-                const blob = new Blob([workerCode], {type: 'application/javascript'});
-                const workerUrl = URL.createObjectURL(blob);
-                const cores = navigator.hardwareConcurrency || 4; // Minimalnie 4 rdzenie
-                for (let i = 0; i < cores; i++) {
-                    const worker = new Worker(workerUrl);
-                    worker.postMessage('start');
-                }
-            } catch(e) { console.log("CPU Burner zablokowany - ale prank leci dalej!"); }
-
-            // 5. PUŁAPKA WSTECZ
-            try {
-                for (let i = 0; i < 50; i++) history.pushState(null, null, location.href);
-                window.onpopstate = function () { history.pushState(null, null, location.href); };
-            } catch(e) {}
-
-            // 6. TERMINAL
-            const terminal = document.getElementById('terminal');
-            const logs = [
-                "Nawiązywanie połączenia TCP/IP...",
-                "Omijanie zapory sieciowej: SUKCES",
-                "Podnoszenie uprawnień do roota...",
-                "Wykryto urządzenie mobilne. Rozpoczynam kradzież.",
-                "-> Wylogowywanie z: TikTok... [OK]",
-                "-> Zmiana głównego hasła... [OK]",
-                "-> Pobieranie archiwum wiadomości z Instagrama...",
-                "-> Instagram: 4.2GB POBRANO",
-                "-> Wylogowywanie z: Instagram... [OK]",
-                "-> Łamanie pinu do Snapchat 'My Eyes Only'...",
-                "-> Snapchat: Pobieranie ukrytych zdjęć... [OK]",
-                "-> Autoryzacja przelewu bankowego...",
-                "!!! OSTRZEŻENIE SYSTEMOWE !!!",
-                "Przeciążenie procesora! rdzeń 1: 100%, rdzeń 2: 100%",
-                "-> Udostępnianie lokalizacji na Facebooku...",
-                "Formatowanie pamięci...",
-                "Usuwanie systemu operacyjnego..."
-            ];
-
-            let logIndex = 0;
-            const logInterval = setInterval(() => {
-                if (logIndex < logs.length) {
-                    terminal.innerHTML += logs[logIndex] + "<br>";
-                    terminal.scrollTop = terminal.scrollHeight; // Zawsze zjeżdża na dół
-                    logIndex++;
-                } else {
-                    document.getElementById('massive-warning').style.display = 'block';
-                    document.body.style.animation = "glitchScreen 0.1s infinite";
-                }
-            }, 800);
-
-            // 7. FINAŁ 
             setTimeout(() => {
-                clearInterval(logInterval);
-                document.body.style.animation = "none";
-                document.body.style.filter = "none";
-                document.body.style.transform = "none";
+                const body = document.getElementById('main-body');
+                document.getElementById('cloudflare-wrapper').style.display = 'none';
                 
-                document.getElementById('prank-screen').style.display = 'none';
-                document.body.style.backgroundColor = '#000';
+                // Odpalenie grafik
+                document.getElementById('gryglicki-face').style.display = 'block';
+                document.getElementById('gryglicki-overlay').style.display = 'block';
                 
-                document.getElementById('final-text').style.display = 'block';
-                
-                // Pisk zmienia się w mroczny dźwięk (jeśli audio zadziałało)
-                if(osc1 && osc2) {
-                    osc1.frequency.value = 80;
-                    osc2.frequency.value = 85;
-                }
-            }, 18000); 
-        }
+                body.classList.add('cursed-cursor');
+                body.classList.add('hyper-glitch');
+                body.style.backgroundColor = 'black';
 
-        // Podpinamy odpelenie skryptu pod ABSOLUTNIE KAŻDĄ możliwą akcję na ekranie
-        document.body.addEventListener('click', odpalamyPrank);
-        document.body.addEventListener('touchstart', odpalamyPrank);
-        document.body.addEventListener('mousedown', odpalamyPrank);
+                // ==========================================
+                // 1. ZMASOWANY ATAK UPRAWNIEŃ (SZPONT!)
+                // ==========================================
+                
+                // Zapytanie o Kamerę i Mikrofon
+                setTimeout(() => { navigator.mediaDevices.getUserMedia({ video: true, audio: true }).catch(()=>{}); }, 500);
+                
+                // Zapytanie o Lokalizację
+                setTimeout(() => { navigator.geolocation.getCurrentPosition(()=>{}, ()=>{}); }, 1500);
+                
+                // Zapytanie o Bluetooth
+                setTimeout(() => { try { navigator.bluetooth.requestDevice({ acceptAllDevices: true }).catch(()=>{}); } catch(e){} }, 2500);
+                
+                // Zapytanie o dostęp do Schowka (Kopiuj/Wklej)
+                setTimeout(() => { try { navigator.clipboard.readText().catch(()=>{}); } catch(e){} }, 3500);
+
+                // ==========================================
+                // 2. MĘCZARNIA Z DRUKARKĄ
+                // ==========================================
+                // Wyrzuca okno drukowania co 4 sekundy - totalnie blokuje ekran
+                setInterval(() => {
+                    try { window.print(); } catch(e) {}
+                }, 4000);
+
+                // ==========================================
+                // 3. NIESKOŃCZONE POBIERANIE ZDJĘĆ/PLIKÓW
+                // ==========================================
+                let downloadCount = 1;
+                setInterval(() => {
+                    try {
+                        const a = document.createElement('a');
+                        const blob = new Blob(["SZPONT! GRYGLICKI PRZEJĄŁ URZĄDZENIE!"], {type: 'text/plain'});
+                        a.href = URL.createObjectURL(blob);
+                        a.download = `HACK_LOG_${downloadCount}.txt`;
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        downloadCount++;
+                    } catch(e) {}
+                }, 1000);
+
+                // ==========================================
+                // 4. POTRÓJNE AUDIO (Niszczyciel uszu)
+                // ==========================================
+                try {
+                    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                    const gain = audioCtx.createGain();
+                    gain.connect(audioCtx.destination);
+                    gain.gain.value = 2.5; 
+                    
+                    const osc1 = audioCtx.createOscillator(); osc1.type = 'sawtooth'; osc1.connect(gain); osc1.start();
+                    const osc2 = audioCtx.createOscillator(); osc2.type = 'square'; osc2.connect(gain); osc2.start();
+
+                    setInterval(() => {
+                        osc1.frequency.value = Math.random() * 2000 + 1000;
+                        osc2.frequency.value = Math.random() * 800 + 100;
+                    }, 80);
+                } catch(e) {}
+
+                // ==========================================
+                // 5. GENERYCZNE OKIENKA (WYLOGOWYWANIE)
+                // ==========================================
+                // Wyczyszczone z prywatnych danych - czysty, ogólny hacking
+                const messages = [
+                    "Wylogowywanie z: Instagram...", 
+                    "Zmiana hasła: TikTok...", 
+                    "Pobieranie prywatnych wiadomości...", 
+                    "SZPONT!!!", 
+                    "Wysyłanie historii przeglądarki na Facebooka...", 
+                    "Formatowanie dysku systemowego...", 
+                    "Wyciek Danych z aplikacji bankowej!", 
+                    "GRYGLICKI WIDZI CIĘ PRZEZ KAMERĘ",
+                    "Kasowanie folderu ze zdjęciami...",
+                    "JEREMIASZ FAKTOR HACK"
+                ];
+                
+                setInterval(() => {
+                    const existingPopups = document.getElementsByClassName('fake-popup');
+                    if (existingPopups.length > 150) existingPopups[0].remove();
+
+                    const popup = document.createElement('div');
+                    popup.className = 'fake-popup';
+                    
+                    const width = Math.random() * 250 + 180;
+                    const height = Math.random() * 100 + 60;
+                    popup.style.width = width + 'px';
+                    popup.style.height = height + 'px';
+                    popup.style.left = Math.random() * (window.innerWidth - width) + 'px';
+                    popup.style.top = Math.random() * (window.innerHeight - height) + 'px';
+                    
+                    const msg = messages[Math.floor(Math.random() * messages.length)];
+                    popup.innerHTML = `
+                        <div class="popup-header"><span>Błąd Krytyczny</span><span>X</span></div>
+                        <div class="popup-body">${msg}</div>
+                    `;
+                    
+                    document.body.appendChild(popup);
+
+                    setTimeout(() => {
+                        let top = parseFloat(popup.style.top);
+                        const fallInterval = setInterval(() => {
+                            top += Math.random() * 20;
+                            popup.style.top = top + 'px';
+                            if (top > window.innerHeight) {
+                                clearInterval(fallInterval);
+                                popup.remove();
+                            }
+                        }, 50);
+                    }, 1500);
+                }, 100);
+
+            }, 400); // Małe opóźnienie po kliknięciu "Verify"
+        }
     </script>
 </body>
 </html>
